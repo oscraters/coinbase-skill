@@ -4,12 +4,21 @@ Public OpenClaw skill and bash CLI for Coinbase Developer Platform (CDP) operati
 
 As of March 4, 2026, Coinbase's server-wallet v1 concept docs are marked deprecated effective February 2, 2026. This scaffold still uses the currently documented `/platform/v1` wallet REST endpoints, so wallet-management coverage should be reviewed against Server Wallet v2 before expanding beyond this initial command set.
 
+## Status
+
+- Public repo scaffold for ClawHub/OpenClaw distribution
+- Shell-first CLI with Coinbase auth helper
+- Safe read-only wallet and balance coverage
+- Guarded wallet creation
+- Planned migration path for Server Wallet v2
+
 ## What This Includes
 
 - OpenClaw-compatible skill bundle in [`skill/`](/home/noir/enna/skills/coinbase-individual/skill)
 - Bash CLI for safe read-only wallet and balance operations
 - Guarded wallet creation flow with explicit confirmation
 - OpenClaw config example using secrets indirection patterns
+- OpenClaw launcher wrapper for direct `skills.entries.coinbase-cdp-bash.config.*` mapping
 - Centralized redaction and hostname validation
 
 ## Security Model
@@ -53,19 +62,25 @@ export COINBASE_SKILL_CONFIG_FILE="$PWD/skill/assets/openclaw.example.jsonc"
 export OPENCLAW_SKILL_CONFIG_FILE="$PWD/skill/assets/openclaw.example.jsonc"
 ```
 
+For OpenClaw-style execution, use the launcher:
+
+```bash
+./skill/scripts/openclaw-run config show-sanitized
+```
+
 Run a few safe commands:
 
 ```bash
-./skill/scripts/coinbase-cli config show-sanitized
-./skill/scripts/coinbase-cli auth check
-./skill/scripts/coinbase-cli wallet list
-./skill/scripts/coinbase-cli balance address --network base-sepolia --address 0x...
+./skill/scripts/openclaw-run config show-sanitized
+./skill/scripts/openclaw-run auth check
+./skill/scripts/openclaw-run wallet list
+./skill/scripts/openclaw-run balance address --network base-sepolia --address 0x...
 ```
 
 Create a wallet only with explicit confirmation:
 
 ```bash
-./skill/scripts/coinbase-cli wallet create --network base-sepolia --yes
+./skill/scripts/openclaw-run wallet create --network base-sepolia --yes
 ```
 
 ## OpenClaw Config Pattern
@@ -73,13 +88,22 @@ Create a wallet only with explicit confirmation:
 Use [`skill/assets/openclaw.example.jsonc`](/home/noir/enna/skills/coinbase-individual/skill/assets/openclaw.example.jsonc) as the starting point. The intended pattern is:
 
 - OpenClaw resolves secret references into environment variables.
+- [`skill/scripts/openclaw-run`](/home/noir/enna/skills/coinbase-individual/skill/scripts/openclaw-run) maps `skills.entries.coinbase-cdp-bash.config.*` into runtime env vars before invoking the CLI.
 - The CLI reads those environment variables at runtime.
-- The CLI can also read an OpenClaw-style JSON config file through `COINBASE_SKILL_CONFIG_FILE` or `OPENCLAW_SKILL_CONFIG_FILE`.
+- The CLI can also read the same OpenClaw-style JSON config file directly through `COINBASE_SKILL_CONFIG_FILE` or `OPENCLAW_SKILL_CONFIG_FILE`.
 - The same config schema works both locally now and later for anyone who installs the skill.
 
 ## ClawHub Packaging
 
 The publishable skill bundle is the [`skill/`](/home/noir/enna/skills/coinbase-individual/skill) directory. It includes `SKILL.md`, scripts, references, and example config assets.
+
+## Release Notes
+
+See [RELEASE_NOTES.md](/home/noir/enna/skills/coinbase-individual/RELEASE_NOTES.md).
+
+## Server Wallet V2
+
+The current CLI uses the presently documented `/platform/v1/wallets` routes, but expansion is planned around a controlled migration to Server Wallet v2. The migration plan is in [skill/references/server-wallet-v2-plan.md](/home/noir/enna/skills/coinbase-individual/skill/references/server-wallet-v2-plan.md).
 
 ## Non-Goals
 

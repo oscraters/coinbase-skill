@@ -16,7 +16,9 @@
           "CDP_WALLET_SECRET": "${secret:default:CDP_WALLET_SECRET}"
         },
         "config": {
+          "environment": "production",
           "apiBaseUrl": "https://api.cdp.coinbase.com",
+          "walletApiBaseUrl": "https://api.cdp.coinbase.com",
           "defaultNetwork": "base-sepolia",
           "allowedHosts": [
             "api.cdp.coinbase.com"

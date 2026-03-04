@@ -2,7 +2,7 @@ interface:
   display_name: "Coinbase CDP Bash"
   short_description: "OpenClaw Coinbase CDP shell skill"
   brand_color: "#0052FF"
-  default_prompt: "Use $coinbase-cdp-bash to inspect Coinbase CDP wallets or balances safely from OpenClaw."
+  default_prompt: "Use $coinbase-cdp-bash to inspect Coinbase CDP wallets or balances safely from OpenClaw with sanitized output."
 
 policy:
   allow_implicit_invocation: true

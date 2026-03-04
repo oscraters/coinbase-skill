@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFIG_FILE="${COINBASE_SKILL_CONFIG_FILE:-${OPENCLAW_SKILL_CONFIG_FILE:-}}"
+SKILL_KEY="${COINBASE_SKILL_KEY:-coinbase-cdp-bash}"
+
+if [[ -n "${CONFIG_FILE}" && -f "${CONFIG_FILE}" ]]; then
+  export COINBASE_SKILL_CONFIG_FILE="${CONFIG_FILE}"
+  export COINBASE_SKILL_KEY="${SKILL_KEY}"
+
+  coinbase_env_exports="$(
+    jq -r --arg skillKey "${SKILL_KEY}" '
+      (.skills.entries[$skillKey] // .[$skillKey] // {}) as $entry
+      | [
+          "COINBASE_API_BASE_URL=\($entry.config.apiBaseUrl // "")",
+          "COINBASE_WALLET_API_BASE_URL=\($entry.config.walletApiBaseUrl // "")",
+          "COINBASE_DEFAULT_NETWORK=\($entry.config.defaultNetwork // "")",
+          "COINBASE_ALLOWED_HOSTS=\(
+            if ($entry.config.allowedHosts | type) == "array" then
+              ($entry.config.allowedHosts | join(","))
+            else
+              ($entry.config.allowedHosts // "")
+            end
+          )",
+          "COINBASE_REQUEST_TIMEOUT_SECONDS=\($entry.config.requestTimeoutSeconds // "")",
+          "COINBASE_ENVIRONMENT=\($entry.config.environment // "")"
+        ]
+      | .[]
+      | select(. | endswith("=") | not)
+    ' "${CONFIG_FILE}"
+  )"
+
+  if [[ -n "${coinbase_env_exports}" ]]; then
+    while IFS= read -r assignment; do
+      export "${assignment}"
+    done <<<"${coinbase_env_exports}"
+  fi
+fi
+
+exec "${BASE_DIR}/coinbase-cli" "$@"
+

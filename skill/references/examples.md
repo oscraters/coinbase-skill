@@ -13,28 +13,27 @@ export COINBASE_DEFAULT_NETWORK="base-sepolia"
 Inspect safe runtime state:
 
 ```bash
-./scripts/coinbase-cli config show-sanitized
-./scripts/coinbase-cli auth check
+./scripts/openclaw-run config show-sanitized
+./scripts/openclaw-run auth check
 ```
 
 Read wallet data:
 
 ```bash
-./scripts/coinbase-cli wallet list
-./scripts/coinbase-cli wallet get --wallet-id wallet-id
-./scripts/coinbase-cli wallet addresses --wallet-id wallet-id
-./scripts/coinbase-cli balance wallet --wallet-id wallet-id
+./scripts/openclaw-run wallet list
+./scripts/openclaw-run wallet get --wallet-id wallet-id
+./scripts/openclaw-run wallet addresses --wallet-id wallet-id
+./scripts/openclaw-run balance wallet --wallet-id wallet-id
 ```
 
 Read public onchain balances:
 
 ```bash
-./scripts/coinbase-cli balance address --network base-sepolia --address 0x0000000000000000000000000000000000000000
+./scripts/openclaw-run balance address --network base-sepolia --address 0x0000000000000000000000000000000000000000
 ```
 
 Create a wallet:
 
 ```bash
-./scripts/coinbase-cli wallet create --network base-sepolia --yes
+./scripts/openclaw-run wallet create --network base-sepolia --yes
 ```
-
