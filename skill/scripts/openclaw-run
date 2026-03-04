@@ -9,7 +9,38 @@ if [[ -n "${CONFIG_FILE}" && -f "${CONFIG_FILE}" ]]; then
   export COINBASE_SKILL_CONFIG_FILE="${CONFIG_FILE}"
   export COINBASE_SKILL_KEY="${SKILL_KEY}"
 
-  coinbase_env_exports="$(
+  while IFS='=' read -r key value; do
+    case "${key}" in
+      COINBASE_API_BASE_URL)
+        : "${COINBASE_API_BASE_URL:=${value}}"
+        export COINBASE_API_BASE_URL
+        ;;
+      COINBASE_WALLET_API_BASE_URL)
+        : "${COINBASE_WALLET_API_BASE_URL:=${value}}"
+        export COINBASE_WALLET_API_BASE_URL
+        ;;
+      COINBASE_DEFAULT_NETWORK)
+        : "${COINBASE_DEFAULT_NETWORK:=${value}}"
+        export COINBASE_DEFAULT_NETWORK
+        ;;
+      COINBASE_ALLOWED_HOSTS)
+        : "${COINBASE_ALLOWED_HOSTS:=${value}}"
+        export COINBASE_ALLOWED_HOSTS
+        ;;
+      COINBASE_REQUEST_TIMEOUT_SECONDS)
+        : "${COINBASE_REQUEST_TIMEOUT_SECONDS:=${value}}"
+        export COINBASE_REQUEST_TIMEOUT_SECONDS
+        ;;
+      COINBASE_ENVIRONMENT)
+        : "${COINBASE_ENVIRONMENT:=${value}}"
+        export COINBASE_ENVIRONMENT
+        ;;
+      COINBASE_WALLET_API_VERSION)
+        : "${COINBASE_WALLET_API_VERSION:=${value}}"
+        export COINBASE_WALLET_API_VERSION
+        ;;
+    esac
+  done < <(
     jq -r --arg skillKey "${SKILL_KEY}" '
       (.skills.entries[$skillKey] // .[$skillKey] // {}) as $entry
       | [
@@ -24,19 +55,13 @@ if [[ -n "${CONFIG_FILE}" && -f "${CONFIG_FILE}" ]]; then
             end
           )",
           "COINBASE_REQUEST_TIMEOUT_SECONDS=\($entry.config.requestTimeoutSeconds // "")",
-          "COINBASE_ENVIRONMENT=\($entry.config.environment // "")"
+          "COINBASE_ENVIRONMENT=\($entry.config.environment // "")",
+          "COINBASE_WALLET_API_VERSION=\($entry.config.walletApiVersion // "")"
         ]
       | .[]
       | select(. | endswith("=") | not)
     ' "${CONFIG_FILE}"
-  )"
-
-  if [[ -n "${coinbase_env_exports}" ]]; then
-    while IFS= read -r assignment; do
-      export "${assignment}"
-    done <<<"${coinbase_env_exports}"
-  fi
+  )
 fi
 
 exec "${BASE_DIR}/coinbase-cli" "$@"
-

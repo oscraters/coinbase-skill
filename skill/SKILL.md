@@ -9,6 +9,13 @@ metadata: { "openclaw": { "primaryEnv": "CDP_API_KEY_ID", "requires": { "bins": 
 
 Use this skill when the user wants Coinbase CDP operations from OpenClaw through a shell-first interface.
 
+Before running the helper, install the bundled Node dependency from `{baseDir}`:
+
+```bash
+cd {baseDir}
+npm install
+```
+
 ## Entry Point
 
 Run [`scripts/openclaw-run`](/home/noir/enna/skills/coinbase-individual/skill/scripts/openclaw-run) when OpenClaw is supplying skill config. Run [`scripts/coinbase-cli`](/home/noir/enna/skills/coinbase-individual/skill/scripts/coinbase-cli) directly for local shell usage.
@@ -37,6 +44,7 @@ Run [`scripts/openclaw-run`](/home/noir/enna/skills/coinbase-individual/skill/sc
 - `COINBASE_REQUEST_TIMEOUT_SECONDS`
 - `COINBASE_ENVIRONMENT`
 - `COINBASE_WALLET_API_BASE_URL`
+- `COINBASE_WALLET_API_VERSION`
 
 ## Common Commands
 

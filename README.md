@@ -35,13 +35,14 @@ As of March 4, 2026, Coinbase's server-wallet v1 concept docs are marked depreca
 - `curl`
 - `jq`
 - `node` 20+
-- `npm install`
+- `npm install` in the publishable skill directory
 
 ## Quick Start
 
 Install dependencies:
 
 ```bash
+cd skill
 npm install
 ```
 
@@ -89,6 +90,7 @@ Use [`skill/assets/openclaw.example.jsonc`](/home/noir/enna/skills/coinbase-indi
 
 - OpenClaw resolves secret references into environment variables.
 - [`skill/scripts/openclaw-run`](/home/noir/enna/skills/coinbase-individual/skill/scripts/openclaw-run) maps `skills.entries.coinbase-cdp-bash.config.*` into runtime env vars before invoking the CLI.
+- The publishable bundle includes its own runtime manifest at [`skill/package.json`](/home/noir/enna/skills/coinbase-individual/skill/package.json), so ClawHub installs are self-contained.
 - The CLI reads those environment variables at runtime.
 - The CLI can also read the same OpenClaw-style JSON config file directly through `COINBASE_SKILL_CONFIG_FILE` or `OPENCLAW_SKILL_CONFIG_FILE`.
 - The same config schema works both locally now and later for anyone who installs the skill.

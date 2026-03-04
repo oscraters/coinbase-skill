@@ -25,13 +25,13 @@ cdp_request() {
   local require_wallet_auth="${4:-false}"
 
   local bearer_jwt
-  bearer_jwt="$(build_jwt "${method}" "${path}" "${body}" "api")"
+  bearer_jwt="$(build_jwt "${method}" "${path}" "${body}" "api")" || fail "Failed to build Coinbase API JWT"
 
   local wallet_header=()
   if [[ "${require_wallet_auth}" == "true" ]]; then
     validate_non_empty "CDP_WALLET_SECRET" "${CDP_WALLET_SECRET}"
     local wallet_jwt
-    wallet_jwt="$(build_jwt "${method}" "${path}" "${body}" "wallet")"
+    wallet_jwt="$(build_jwt "${method}" "${path}" "${body}" "wallet")" || fail "Failed to build Coinbase wallet JWT"
     wallet_header=(-H "X-Wallet-Auth: ${wallet_jwt}")
   fi
 

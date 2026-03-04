@@ -18,7 +18,7 @@ load_json_config_defaults() {
     return 0
   fi
 
-  local config_api_base_url config_wallet_api_base_url config_default_network config_allowed_hosts config_timeout config_environment
+  local config_api_base_url config_wallet_api_base_url config_default_network config_allowed_hosts config_timeout config_environment config_wallet_api_version
   config_api_base_url="$(jq -r '.config.apiBaseUrl // empty' <<<"${skill_json}")"
   config_wallet_api_base_url="$(jq -r '.config.walletApiBaseUrl // empty' <<<"${skill_json}")"
   config_default_network="$(jq -r '.config.defaultNetwork // empty' <<<"${skill_json}")"
@@ -31,6 +31,7 @@ load_json_config_defaults() {
   ' <<<"${skill_json}")"
   config_timeout="$(jq -r '.config.requestTimeoutSeconds // empty' <<<"${skill_json}")"
   config_environment="$(jq -r '.config.environment // empty' <<<"${skill_json}")"
+  config_wallet_api_version="$(jq -r '.config.walletApiVersion // empty' <<<"${skill_json}")"
 
   local env_api_key_id env_api_key_secret env_wallet_secret
   env_api_key_id="$(jq -r '.env.CDP_API_KEY_ID // empty' <<<"${skill_json}")"
@@ -43,6 +44,7 @@ load_json_config_defaults() {
   : "${COINBASE_ALLOWED_HOSTS:=${config_allowed_hosts}}"
   : "${COINBASE_REQUEST_TIMEOUT_SECONDS:=${config_timeout}}"
   : "${COINBASE_ENVIRONMENT:=${config_environment}}"
+  : "${COINBASE_WALLET_API_VERSION:=${config_wallet_api_version}}"
   : "${CDP_API_KEY_ID:=${env_api_key_id}}"
   : "${CDP_API_KEY_SECRET:=${env_api_key_secret}}"
   : "${CDP_WALLET_SECRET:=${env_wallet_secret}}"
@@ -64,6 +66,7 @@ init_runtime() {
   COINBASE_ALLOWED_HOSTS="${COINBASE_ALLOWED_HOSTS:-api.cdp.coinbase.com}"
   COINBASE_REQUEST_TIMEOUT_SECONDS="${COINBASE_REQUEST_TIMEOUT_SECONDS:-30}"
   COINBASE_ENVIRONMENT="${COINBASE_ENVIRONMENT:-production}"
+  COINBASE_WALLET_API_VERSION="${COINBASE_WALLET_API_VERSION:-v1}"
 
   validate_non_empty "CDP_API_KEY_ID" "${CDP_API_KEY_ID}"
   validate_non_empty "CDP_API_KEY_SECRET" "${CDP_API_KEY_SECRET}"
@@ -87,6 +90,7 @@ config_as_sanitized_json() {
     --arg allowedHosts "${COINBASE_ALLOWED_HOSTS}" \
     --arg timeout "${COINBASE_REQUEST_TIMEOUT_SECONDS}" \
     --arg environment "${COINBASE_ENVIRONMENT}" \
+    --arg walletApiVersion "${COINBASE_WALLET_API_VERSION}" \
     '{
       apiKeyId: $apiKeyId,
       apiKeySecret: $apiKeySecret,
@@ -97,6 +101,7 @@ config_as_sanitized_json() {
       defaultNetwork: $defaultNetwork,
       allowedHosts: ($allowedHosts | split(",")),
       timeoutSeconds: ($timeout | tonumber),
-      environment: $environment
+      environment: $environment,
+      walletApiVersion: $walletApiVersion
     }'
 }

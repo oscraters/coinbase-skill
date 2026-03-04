@@ -44,6 +44,12 @@ As of March 4, 2026, Coinbase marks Server Wallet v1 concept docs deprecated eff
 - Route commands through a thin dispatcher based on configured wallet API version.
 - Keep common validation, logging, auth, and HTTP code shared.
 
+Status in this repo:
+
+- `COINBASE_WALLET_API_VERSION` is implemented now.
+- `v1` routes to the current `/platform/v1/wallets` adapter.
+- `v2` is a deliberate stub that fails closed until the endpoint and auth contract are confirmed.
+
 ## Immediate Rule
 
 Do not add transaction submission or signing flows until the v2 auth and endpoint contract are confirmed against the current Coinbase docs and SDK.

@@ -12,6 +12,12 @@ source "${BASE_DIR}/lib/validate.sh"
 source "${BASE_DIR}/lib/config.sh"
 # shellcheck source=lib/http.sh
 source "${BASE_DIR}/lib/http.sh"
+# shellcheck source=lib/wallet-v1.sh
+source "${BASE_DIR}/lib/wallet-v1.sh"
+# shellcheck source=lib/wallet-v2.sh
+source "${BASE_DIR}/lib/wallet-v2.sh"
+# shellcheck source=lib/wallet-dispatch.sh
+source "${BASE_DIR}/lib/wallet-dispatch.sh"
 
 usage() {
   cat <<'EOF'
@@ -33,6 +39,7 @@ Global environment:
   COINBASE_API_BASE_URL
   COINBASE_DEFAULT_NETWORK
   COINBASE_ALLOWED_HOSTS
+  COINBASE_WALLET_API_VERSION
 EOF
 }
 
@@ -71,28 +78,26 @@ cmd_config_show_sanitized() {
 
 cmd_auth_check() {
   init_runtime
-  local response
-  response="$(cdp_request "GET" "/platform/v1/wallets" "" false)"
-  jq '{status:"ok", wallet_count:(.total_count // (.data | length // 0))}' <<<"${response}"
+  wallet_dispatch "wallet_auth_check"
 }
 
 cmd_wallet_list() {
   init_runtime
-  cdp_request "GET" "/platform/v1/wallets" "" false
+  wallet_dispatch "wallet_list"
 }
 
 cmd_wallet_get() {
   init_runtime
   local wallet_id
   wallet_id="$(parse_flag_value "--wallet-id" "$@")" || fail "wallet get requires --wallet-id"
-  cdp_request "GET" "/platform/v1/wallets/${wallet_id}" "" false
+  wallet_dispatch "wallet_get" "${wallet_id}"
 }
 
 cmd_wallet_addresses() {
   init_runtime
   local wallet_id
   wallet_id="$(parse_flag_value "--wallet-id" "$@")" || fail "wallet addresses requires --wallet-id"
-  cdp_request "GET" "/platform/v1/wallets/${wallet_id}/addresses" "" false
+  wallet_dispatch "wallet_addresses" "${wallet_id}"
 }
 
 cmd_wallet_create() {
@@ -102,16 +107,14 @@ cmd_wallet_create() {
   network="$(parse_flag_value "--network" "$@" || true)"
   network="${network:-${COINBASE_DEFAULT_NETWORK}}"
   validate_network "${network}"
-  local body
-  body="$(jq -cn --arg network "${network}" '{wallet:{network_id:$network,use_server_signer:true}}')"
-  cdp_request "POST" "/platform/v1/wallets" "${body}" false
+  wallet_dispatch "wallet_create" "${network}"
 }
 
 cmd_balance_wallet() {
   init_runtime
   local wallet_id
   wallet_id="$(parse_flag_value "--wallet-id" "$@")" || fail "balance wallet requires --wallet-id"
-  cdp_request "GET" "/platform/v1/wallets/${wallet_id}/balances" "" false
+  wallet_dispatch "wallet_balance" "${wallet_id}"
 }
 
 cmd_balance_wallet_address() {
@@ -119,7 +122,7 @@ cmd_balance_wallet_address() {
   local wallet_id address_id
   wallet_id="$(parse_flag_value "--wallet-id" "$@")" || fail "balance wallet-address requires --wallet-id"
   address_id="$(parse_flag_value "--address-id" "$@")" || fail "balance wallet-address requires --address-id"
-  cdp_request "GET" "/platform/v1/wallets/${wallet_id}/addresses/${address_id}/balances" "" false
+  wallet_dispatch "wallet_address_balance" "${wallet_id}" "${address_id}"
 }
 
 cmd_balance_address() {
@@ -162,4 +165,3 @@ main() {
 }
 
 main "$@"
-
