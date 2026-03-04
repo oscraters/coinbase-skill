@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/common.sh
+source "${BASE_DIR}/lib/common.sh"
+# shellcheck source=lib/log.sh
+source "${BASE_DIR}/lib/log.sh"
+# shellcheck source=lib/validate.sh
+source "${BASE_DIR}/lib/validate.sh"
+# shellcheck source=lib/config.sh
+source "${BASE_DIR}/lib/config.sh"
+# shellcheck source=lib/http.sh
+source "${BASE_DIR}/lib/http.sh"
+
+usage() {
+  cat <<'EOF'
+Usage:
+  coinbase-cli config show-sanitized
+  coinbase-cli auth check
+  coinbase-cli wallet list
+  coinbase-cli wallet get --wallet-id <wallet-id>
+  coinbase-cli wallet addresses --wallet-id <wallet-id>
+  coinbase-cli wallet create [--network <network>] --yes
+  coinbase-cli balance wallet --wallet-id <wallet-id>
+  coinbase-cli balance address --network <network> --address <address>
+  coinbase-cli balance wallet-address --wallet-id <wallet-id> --address-id <address-id>
+
+Global environment:
+  CDP_API_KEY_ID
+  CDP_API_KEY_SECRET
+  CDP_WALLET_SECRET
+  COINBASE_API_BASE_URL
+  COINBASE_DEFAULT_NETWORK
+  COINBASE_ALLOWED_HOSTS
+EOF
+}
+
+parse_flag_value() {
+  local flag="$1"
+  shift
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      "${flag}")
+        if [[ $# -lt 2 ]]; then
+          fail "Missing value for ${flag}"
+        fi
+        printf '%s\n' "$2"
+        return 0
+        ;;
+    esac
+    shift
+  done
+  return 1
+}
+
+require_yes_flag() {
+  local arg
+  for arg in "$@"; do
+    if [[ "${arg}" == "--yes" ]]; then
+      return 0
+    fi
+  done
+  fail "Refusing write operation without --yes"
+}
+
+cmd_config_show_sanitized() {
+  init_runtime
+  config_as_sanitized_json
+}
+
+cmd_auth_check() {
+  init_runtime
+  local response
+  response="$(cdp_request "GET" "/platform/v1/wallets" "" false)"
+  jq '{status:"ok", wallet_count:(.total_count // (.data | length // 0))}' <<<"${response}"
+}
+
+cmd_wallet_list() {
+  init_runtime
+  cdp_request "GET" "/platform/v1/wallets" "" false
+}
+
+cmd_wallet_get() {
+  init_runtime
+  local wallet_id
+  wallet_id="$(parse_flag_value "--wallet-id" "$@")" || fail "wallet get requires --wallet-id"
+  cdp_request "GET" "/platform/v1/wallets/${wallet_id}" "" false
+}
+
+cmd_wallet_addresses() {
+  init_runtime
+  local wallet_id
+  wallet_id="$(parse_flag_value "--wallet-id" "$@")" || fail "wallet addresses requires --wallet-id"
+  cdp_request "GET" "/platform/v1/wallets/${wallet_id}/addresses" "" false
+}
+
+cmd_wallet_create() {
+  init_runtime
+  require_yes_flag "$@"
+  local network
+  network="$(parse_flag_value "--network" "$@" || true)"
+  network="${network:-${COINBASE_DEFAULT_NETWORK}}"
+  validate_network "${network}"
+  local body
+  body="$(jq -cn --arg network "${network}" '{wallet:{network_id:$network,use_server_signer:true}}')"
+  cdp_request "POST" "/platform/v1/wallets" "${body}" false
+}
+
+cmd_balance_wallet() {
+  init_runtime
+  local wallet_id
+  wallet_id="$(parse_flag_value "--wallet-id" "$@")" || fail "balance wallet requires --wallet-id"
+  cdp_request "GET" "/platform/v1/wallets/${wallet_id}/balances" "" false
+}
+
+cmd_balance_wallet_address() {
+  init_runtime
+  local wallet_id address_id
+  wallet_id="$(parse_flag_value "--wallet-id" "$@")" || fail "balance wallet-address requires --wallet-id"
+  address_id="$(parse_flag_value "--address-id" "$@")" || fail "balance wallet-address requires --address-id"
+  cdp_request "GET" "/platform/v1/wallets/${wallet_id}/addresses/${address_id}/balances" "" false
+}
+
+cmd_balance_address() {
+  init_runtime
+  local network address
+  network="$(parse_flag_value "--network" "$@" || true)"
+  network="${network:-${COINBASE_DEFAULT_NETWORK}}"
+  address="$(parse_flag_value "--address" "$@")" || fail "balance address requires --address"
+  validate_network "${network}"
+  validate_evm_address "${address}"
+  cdp_request "GET" "/platform/v2/data/evm/token-balances/${network}/${address}" "" false
+}
+
+main() {
+  require_bins bash curl jq node
+
+  local group="${1:-}"
+  local sub="${2:-}"
+  if [[ $# -lt 2 ]]; then
+    usage
+    exit 1
+  fi
+  shift 2
+
+  case "${group}:${sub}" in
+    config:show-sanitized) cmd_config_show_sanitized "$@" ;;
+    auth:check) cmd_auth_check "$@" ;;
+    wallet:list) cmd_wallet_list "$@" ;;
+    wallet:get) cmd_wallet_get "$@" ;;
+    wallet:addresses) cmd_wallet_addresses "$@" ;;
+    wallet:create) cmd_wallet_create "$@" ;;
+    balance:wallet) cmd_balance_wallet "$@" ;;
+    balance:wallet-address) cmd_balance_wallet_address "$@" ;;
+    balance:address) cmd_balance_address "$@" ;;
+    *)
+      usage
+      exit 1
+      ;;
+  esac
+}
+
+main "$@"
+

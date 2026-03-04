@@ -1,0 +1,29 @@
+{
+  "secrets": {
+    "providers": {
+      "default": {
+        "source": "env"
+      }
+    }
+  },
+  "skills": {
+    "entries": {
+      "coinbase-cdp-bash": {
+        "enabled": true,
+        "env": {
+          "CDP_API_KEY_ID": "${secret:default:CDP_API_KEY_ID}",
+          "CDP_API_KEY_SECRET": "${secret:default:CDP_API_KEY_SECRET}",
+          "CDP_WALLET_SECRET": "${secret:default:CDP_WALLET_SECRET}"
+        },
+        "config": {
+          "apiBaseUrl": "https://api.cdp.coinbase.com",
+          "defaultNetwork": "base-sepolia",
+          "allowedHosts": [
+            "api.cdp.coinbase.com"
+          ],
+          "requestTimeoutSeconds": 30
+        }
+      }
+    }
+  }
+}

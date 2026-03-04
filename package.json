@@ -1,0 +1,15 @@
+{
+  "name": "coinbase-individual",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OpenClaw skill and bash CLI for Coinbase CDP",
+  "type": "module",
+  "scripts": {
+    "lint:shell": "bash -n skill/scripts/coinbase-cli skill/scripts/lib/common.sh skill/scripts/lib/config.sh skill/scripts/lib/http.sh skill/scripts/lib/log.sh skill/scripts/lib/validate.sh",
+    "auth:help": "node skill/scripts/helpers/cdp-auth.mjs --help"
+  },
+  "dependencies": {
+    "@coinbase/cdp-sdk": "^1.26.0"
+  }
+}
+
